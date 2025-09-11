@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --hostname 0.0.0.0 --port 5000",
     "build": "./scripts/build.sh",
     "export": "echo deprecated",
     "build2": "./scripts/build.sh",
