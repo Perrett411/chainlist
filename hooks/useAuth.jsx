@@ -6,26 +6,30 @@ import { useState, useEffect } from "react";
 
 export function useAuth() {
   const [isClient, setIsClient] = useState(false);
-  
+
   // Only run on client side to avoid SSR issues
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const { data: user, isLoading, error } = useQuery({
+  const {
+    data: user,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["/api/auth/user"],
     queryFn: async () => {
       const response = await fetch("/api/auth/user", {
-        credentials: 'include', // Include cookies
+        credentials: "include", // Include cookies
       });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           return null; // Not authenticated
         }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       return response.json();
     },
     retry: false,
@@ -42,5 +46,5 @@ export function useAuth() {
 
 // Utility function for checking unauthorized errors
 export function isUnauthorizedError(error) {
-  return error?.message?.includes('401') || error?.message?.includes('Unauthorized');
+  return error?.message?.includes("401") || error?.message?.includes("Unauthorized");
 }

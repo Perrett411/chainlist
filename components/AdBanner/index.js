@@ -2,7 +2,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Native } from "@hypelab/sdk-react";
 import { HYPELAB_NATIVE_PLACEMENT_SLUG } from "../../constants/hypelab";
 
+// Feature flag to disable HypeLab in development
+const DISABLE_IN_DEVELOPMENT = process.env.NODE_ENV === 'development';
+
 export const AdBanner = () => {
+  // Don't render anything if disabled in development
+  if (DISABLE_IN_DEVELOPMENT) {
+    return null;
+  }
   const [isSquare, setIsSquare] = useState(false);
   const [hideNativeTextContent, setHideNativeTextContent] = useState(true);
   const resizeObserver = useRef(null);

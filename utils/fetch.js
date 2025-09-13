@@ -33,9 +33,15 @@ function removeEndingSlash(rpc) {
 }
 
 export function populateChain(chain, chainTvls) {
-  let rpcs = (allExtraRpcs[chain.chainId]?.rpcs ?? []).map(removeEndingSlashObject);
+  // Defensive guard to prevent crashes from undefined or malformed extraRpcs
+  const safeExtraRpcs = allExtraRpcs && typeof allExtraRpcs === 'object' ? allExtraRpcs : {};
+  const chainRpcs = safeExtraRpcs[chain.chainId]?.rpcs;
+  let rpcs = Array.isArray(chainRpcs) ? chainRpcs.map(removeEndingSlashObject) : [];
 
-  for (const rpcUrl of chain.rpc) {
+  // Defensive guard for chain.rpc - ensure it's an array
+  const chainRpcList = Array.isArray(chain.rpc) ? chain.rpc : [];
+  
+  for (const rpcUrl of chainRpcList) {
     const rpc = removeEndingSlashObject(rpcUrl);
 
     if (!rpc.url.includes("${INFURA_API_KEY}") && !rpcs.find((r) => r.url === rpc.url)) {

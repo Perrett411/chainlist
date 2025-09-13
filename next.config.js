@@ -6,6 +6,9 @@ module.exports = {
   // },
   reactStrictMode: true,
   // Allow all dev origins for Replit proxy support
+  experimental: {
+    serverComponentsExternalPackages: [],
+  },
   async headers() {
     return [
       {
@@ -18,6 +21,10 @@ module.exports = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
           },
         ],
       },
