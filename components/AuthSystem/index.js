@@ -120,10 +120,10 @@ const AuthSystem = ({ onAuthChange }) => {
             <span className={`text-xs px-2 py-1 rounded-full ${
               user.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
             }`}>
-              {user.role.toUpperCase()}
+              {user.role?.toUpperCase() || 'USER'}
             </span>
             <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-[#171717] dark:text-[#B3B3B3] text-gray-700">
-              {user.provider.toUpperCase()}
+              {user.provider?.toUpperCase() || 'REPLIT'}
             </span>
           </div>
         </div>
@@ -133,12 +133,12 @@ const AuthSystem = ({ onAuthChange }) => {
       <div className="mb-4">
         <h4 className="text-sm font-medium dark:text-[#B3B3B3] text-gray-900 mb-2">Permissions</h4>
         <div className="flex gap-2">
-          {user.permissions.map((permission) => (
+          {(user.permissions || []).map((permission) => (
             <span 
               key={permission}
               className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700"
             >
-              {permission.toUpperCase()}
+              {permission?.toUpperCase() || 'STANDARD'}
             </span>
           ))}
         </div>

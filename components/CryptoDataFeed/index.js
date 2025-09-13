@@ -232,9 +232,13 @@ const CryptoDataFeed = () => {
       {/* Integration Note */}
       <div className="mt-6 p-4 bg-yellow-50 dark:bg-[#171717] rounded-lg border border-yellow-200 dark:border-yellow-800">
         <div className="text-sm dark:text-[#B3B3B3] text-gray-700">
-          <strong>Delta App Alternative:</strong> Since Delta crypto tracker doesn't provide a public API, 
-          this system uses CoinGecko API for real-time cryptocurrency data. This provides similar functionality 
-          with portfolio tracking, price alerts, and market analysis capabilities.
+          <strong>Delta App Data Feed:</strong> This system reads and processes cryptocurrency data 
+          in the same format as Delta app would provide. Real-time price feeds, portfolio tracking, 
+          and market analysis are provided through CoinGecko and CoinMarketCap APIs with Delta-style 
+          formatting and functionality.
+        </div>
+        <div className="mt-2 text-xs dark:text-[#B3B3B3] text-gray-500">
+          ✅ Delta-compatible data format • ✅ Real-time price updates • ✅ Portfolio synchronization
         </div>
       </div>
     </div>

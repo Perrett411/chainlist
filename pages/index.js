@@ -7,6 +7,9 @@ import { AdBanner } from "../components/AdBanner";
 import ConversationalAI from "../components/ConversationalAI";
 import QuantumLockChain from "../components/QuantumLockChain";
 import DataStreaming from "../components/DataStreaming";
+import CryptoWalletConnections from "../components/CryptoWalletConnections";
+import CryptoDataFeed from "../components/CryptoDataFeed";
+import BankConnections from "../components/BankConnections";
 import AuthSystem from "../components/AuthSystem";
 import AdminPanel from "../components/AdminPanel";
 import { generateChainData } from "../utils/fetch";
@@ -34,6 +37,9 @@ function Home({ chains }) {
     { id: 'blockchain', name: 'Blockchain Networks', icon: '🔗' },
     { id: 'quantum', name: 'Quantum Lock Chain', icon: '⚛️' },
     { id: 'ai', name: 'CFO AI Assistant', icon: '🤖' },
+    { id: 'crypto', name: 'Crypto Wallets', icon: '💰' },
+    { id: 'banks', name: 'Bank Connections', icon: '🏦' },
+    { id: 'delta', name: 'Delta Data Feed', icon: '📈' },
     { id: 'streaming', name: 'Data Streaming', icon: '📊' },
     { id: 'admin', name: 'API Controls', icon: '⚙️' }
   ];
@@ -105,6 +111,9 @@ function Home({ chains }) {
               <div className="min-h-[400px]">
                 {activeTab === 'ai' && <ConversationalAI />}
                 {activeTab === 'quantum' && <QuantumLockChain />}
+                {activeTab === 'crypto' && <CryptoWalletConnections />}
+                {activeTab === 'banks' && <BankConnections />}
+                {activeTab === 'delta' && <CryptoDataFeed />}
                 {activeTab === 'streaming' && <DataStreaming />}
                 {activeTab === 'admin' && <AdminPanel user={user} />}
                 
