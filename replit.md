@@ -1,8 +1,8 @@
-# Chainlist - EVM Network Directory
+# X Chain - EVM Network Directory
 
 ## Overview
 
-Chainlist is a comprehensive directory of Ethereum Virtual Machine (EVM) compatible blockchain networks. The platform provides users with detailed information about various blockchain networks, including RPC endpoints, chain IDs, native currencies, and explorers. Users can easily connect their wallets to different networks and access real-time performance metrics for RPC endpoints.
+X Chain is a comprehensive directory of Ethereum Virtual Machine (EVM) compatible blockchain networks. The platform provides users with detailed information about various blockchain networks, including RPC endpoints, chain IDs, native currencies, and explorers. Users can easily connect their wallets to different networks and access real-time performance metrics for RPC endpoints.
 
 The project has been enhanced with quantum-powered financial intelligence capabilities through integration with Perrett and Associates Private Investment Firm LLC, featuring advanced AI-driven financial analysis, crypto wallet connections, and banking integrations.
 

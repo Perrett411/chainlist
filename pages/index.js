@@ -60,10 +60,10 @@ function Home({ initialChains }) {
   return (
     <>
       <Head>
-        <title>{PERRETT_CONFIG.OWNER} - Quantum-Powered Financial Intelligence</title>
+        <title>X Chain - Next-Generation Blockchain Networks</title>
         <meta
           name="description"
-          content={`${PERRETT_CONFIG.OWNER} - Advanced blockchain networks, quantum-enhanced security, AI-powered financial management, and real-time data streaming. ${PERRETT_CONFIG.BRAND.tagline}`}
+          content="X Chain - Advanced blockchain networks, quantum-enhanced security, AI-powered financial management, and real-time data streaming. Next-Generation Blockchain Networks"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>

@@ -369,7 +369,7 @@ const BankConnections = () => {
             Bank & Financial Connections
           </h2>
           <p className="text-sm dark:text-[#B3B3B3] text-gray-600">
-            Connect all your financial institutions • {PERRETT_CONFIG.OWNER}
+            Connect all your financial institutions • {PERRETT_CONFIG.OWNER} <span className="text-xs">PERRETT and Associate Private Investment Firm LLC</span>
           </p>
         </div>
         <div className="text-right">

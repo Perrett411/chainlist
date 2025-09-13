@@ -133,7 +133,7 @@ const ConversationalAI = () => {
       </div>
       
       <p className="text-sm dark:text-[#B3B3B3] text-gray-600 mb-6">
-        {PERRETT_CONFIG.BRAND.tagline} • {PERRETT_CONFIG.OWNER}
+        {PERRETT_CONFIG.BRAND.tagline} • {PERRETT_CONFIG.OWNER} <span className="text-xs">PERRETT and Associate Private Investment Firm LLC</span>
       </p>
 
       {/* Conversation Display */}

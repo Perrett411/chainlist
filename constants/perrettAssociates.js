@@ -1,10 +1,10 @@
 // Perrett and Associates Private Investment Firm LLC Configuration
 export const PERRETT_CONFIG = {
-  NAME: "ASSOCIATE accountant",
-  OWNER: "Perrett and Associates Private Investment Firm LLC",
-  BUSINESS_RELATION: "Associate to Perrett and Associates",
+  NAME: "X Chain",
+  OWNER: "X Chain",
+  BUSINESS_RELATION: "X Chain Platform",
   ASSOCIATION: "financial management",
-  AI_NAME: "Perrett and Associates CFO AI",
+  AI_NAME: "X Chain AI",
   
   // Quantum Blockchain Configuration
   QUANTUM_PRINCIPLES: {
@@ -19,8 +19,8 @@ export const PERRETT_CONFIG = {
     primaryColor: "#2F80ED",
     secondaryColor: "#0D0D0D", 
     accentColor: "#B3B3B3",
-    logo: "Perrett & Associates",
-    tagline: "Quantum-Powered Financial Intelligence"
+    logo: "X Chain",
+    tagline: "Next-Generation Blockchain Networks"
   },
   
   // AI Assistant Configuration

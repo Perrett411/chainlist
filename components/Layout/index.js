@@ -135,9 +135,16 @@ export default function Layout({ children, lang, chainName, setChainName }) {
           </a>
         </div>
       </div>
-      <div className="dark:bg-[#181818] bg-[#f3f3f3] p-5 relative flex flex-col gap-5">
+      <div className="dark:bg-[#181818] bg-[#f3f3f3] p-5 relative flex flex-col gap-5 min-h-screen">
         <Header lang={lang} chainName={chainName} setChainName={setChainName} />
-        {children}
+        <div className="flex-grow">
+          {children}
+        </div>
+        <footer className="mt-auto pt-8 text-center">
+          <p className="text-xs dark:text-[#B3B3B3] text-gray-500">
+            created by mr. X
+          </p>
+        </footer>
       </div>
     </div>
   );

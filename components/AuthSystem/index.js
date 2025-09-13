@@ -44,7 +44,7 @@ const AuthSystem = ({ onAuthChange }) => {
       <div className="bg-white dark:bg-[#0D0D0D] rounded-[10px] shadow-lg p-6 max-w-md mx-auto">
         <div className="text-center mb-6">
           <h2 className="text-xl font-bold dark:text-[#B3B3B3] text-black mb-2">
-            Access {PERRETT_CONFIG.OWNER}
+            Access {PERRETT_CONFIG.OWNER} <span className="text-xs font-normal">PERRETT and Associate Private Investment Firm LLC</span>
           </h2>
           <p className="text-sm dark:text-[#B3B3B3] text-gray-600">
             Secure login for {PERRETT_CONFIG.ASSOCIATION} platform
