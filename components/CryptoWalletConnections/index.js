@@ -527,7 +527,7 @@ const CryptoWalletConnections = () => {
             Crypto Wallet Connections
           </h2>
           <p className="text-sm dark:text-[#B3B3B3] text-gray-600">
-            Connect all your crypto wallets and exchanges • {PERRETT_CONFIG.OWNER}
+            Connect all your crypto wallets and exchanges • {PERRETT_CONFIG.OWNER} <span className="text-xs">PERRETT and Associate Private Investment Firm LLC</span>
           </p>
         </div>
         <div className="flex items-center gap-4">

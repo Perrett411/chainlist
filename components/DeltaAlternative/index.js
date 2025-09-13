@@ -172,7 +172,7 @@ const DeltaAlternative = () => {
             Delta App Alternative
           </h2>
           <p className="text-sm dark:text-[#B3B3B3] text-gray-600">
-            Portfolio tracking with Delta-style functionality • {PERRETT_CONFIG.OWNER}
+            Portfolio tracking with Delta-style functionality • {PERRETT_CONFIG.OWNER} <span className="text-xs">PERRETT and Associate Private Investment Firm LLC</span>
           </p>
         </div>
         <div className="text-right">

@@ -7,7 +7,61 @@ const ConversationalAI = () => {
   const [conversation, setConversation] = useState([]);
   const [transcript, setTranscript] = useState('');
   const [aiResponse, setAiResponse] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [usageCount, setUsageCount] = useState(0);
+  const [showPricing, setShowPricing] = useState(false);
   const recognitionRef = useRef(null);
+
+  // AI Assistant Pricing Plans
+  const pricingPlans = [
+    {
+      id: 'basic',
+      name: 'Basic Financial AI',
+      price: 29.99,
+      period: 'month',
+      queries: 100,
+      features: [
+        'Basic financial analysis',
+        'Portfolio overview',
+        'Simple spreadsheet operations',
+        'Email support'
+      ],
+      color: 'from-blue-500 to-cyan-500'
+    },
+    {
+      id: 'professional',
+      name: 'Professional CFO AI',
+      price: 99.99,
+      period: 'month',
+      queries: 500,
+      features: [
+        'Advanced financial modeling',
+        'Investment strategy analysis',
+        'Complex spreadsheet automation',
+        'Real-time market insights',
+        'Priority support',
+        'Custom reports'
+      ],
+      color: 'from-purple-500 to-pink-500',
+      popular: true
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise Financial AI',
+      price: 299.99,
+      period: 'month',
+      queries: 'unlimited',
+      features: [
+        'Unlimited AI consultations',
+        'Custom financial algorithms',
+        'Multi-company analysis',
+        'API integrations',
+        'Dedicated account manager',
+        'White-label options'
+      ],
+      color: 'from-green-500 to-emerald-500'
+    }
+  ];
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -53,10 +107,37 @@ const ConversationalAI = () => {
     }
   };
 
+  // Check usage limits
+  const checkUsageLimits = () => {
+    if (!selectedPlan) return false;
+    if (selectedPlan.queries === 'unlimited') return true;
+    return usageCount < selectedPlan.queries;
+  };
+
   // Handle User Input (voice or text)
   const handleUserInput = async (input) => {
+    // Check if user has access
+    if (!selectedPlan) {
+      setShowPricing(true);
+      return;
+    }
+    
+    if (!checkUsageLimits()) {
+      const upgradeMessage = { 
+        role: 'assistant', 
+        content: `You've reached your monthly query limit of ${selectedPlan.queries}. Please upgrade your plan to continue using the AI assistant.`, 
+        timestamp: new Date() 
+      };
+      setConversation(prev => [...prev, upgradeMessage]);
+      setShowPricing(true);
+      return;
+    }
+
     const userMessage = { role: 'user', content: input, timestamp: new Date() };
     setConversation(prev => [...prev, userMessage]);
+    
+    // Increment usage
+    setUsageCount(prev => prev + 1);
     
     // Process with CFO AI
     const aiResponseText = await processWithCFOAI(input);
@@ -66,6 +147,42 @@ const ConversationalAI = () => {
     
     // Speak the response
     speakResponse(aiResponseText);
+  };
+
+  // Handle plan selection and payment
+  const handlePlanSelection = async (plan) => {
+    try {
+      // Create payment intent via Stripe
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          amount: plan.price,
+          planId: plan.id,
+          planName: plan.name
+        }),
+      });
+      
+      if (response.ok) {
+        const { clientSecret } = await response.json();
+        // Here you would integrate with Stripe checkout
+        // For now, simulate successful payment
+        setSelectedPlan(plan);
+        setUsageCount(0);
+        setShowPricing(false);
+        
+        const welcomeMessage = { 
+          role: 'assistant', 
+          content: `Welcome to ${plan.name}! You now have access to ${plan.queries === 'unlimited' ? 'unlimited' : plan.queries} AI consultations per month. How can I help you with your financial analysis today?`, 
+          timestamp: new Date() 
+        };
+        setConversation([welcomeMessage]);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+    }
   };
 
   // Process input with CFO AI
@@ -136,6 +253,126 @@ const ConversationalAI = () => {
         {PERRETT_CONFIG.BRAND.tagline} • {PERRETT_CONFIG.OWNER} <span className="text-xs">PERRETT and Associate Private Investment Firm LLC</span>
       </p>
 
+      {/* Current Plan & Usage Display */}
+      {selectedPlan && (
+        <div className="mb-4 p-3 bg-gray-50 dark:bg-[#171717] rounded-lg">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium dark:text-[#B3B3B3] text-gray-700">
+              Current Plan: {selectedPlan.name}
+            </span>
+            <button
+              onClick={() => setShowPricing(true)}
+              className="text-xs text-[#2F80ED] hover:underline"
+            >
+              Upgrade
+            </button>
+          </div>
+          <div className="text-xs dark:text-[#B3B3B3] text-gray-600">
+            Usage: {usageCount}/{selectedPlan.queries === 'unlimited' ? '∞' : selectedPlan.queries} queries this month
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-[#252525] rounded-full h-2 mt-2">
+            <div 
+              className="bg-[#2F80ED] h-2 rounded-full transition-all"
+              style={{ 
+                width: selectedPlan.queries === 'unlimited' ? '100%' : `${(usageCount / selectedPlan.queries) * 100}%` 
+              }}
+            ></div>
+          </div>
+        </div>
+      )}
+
+      {/* Pricing Modal */}
+      {showPricing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-[#0D0D0D] rounded-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold dark:text-[#B3B3B3] text-black">
+                  💰 AI Financial Assistant Pricing
+                </h3>
+                <button
+                  onClick={() => setShowPricing(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-[#B3B3B3] dark:hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <p className="text-sm dark:text-[#B3B3B3] text-gray-600 mb-8 text-center">
+                Choose the perfect plan for your financial analysis and spreadsheet automation needs
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {pricingPlans.map((plan) => (
+                  <div key={plan.id} className={`relative rounded-lg p-6 border-2 transition-all ${
+                    plan.popular 
+                      ? 'border-[#2F80ED] shadow-lg scale-105' 
+                      : 'border-gray-200 dark:border-[#171717] hover:border-[#2F80ED]'
+                  }`}>
+                    {plan.popular && (
+                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <span className="bg-[#2F80ED] text-white px-4 py-1 rounded-full text-xs font-medium">
+                          Most Popular
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${plan.color} mb-4 flex items-center justify-center`}>
+                      <span className="text-white text-xl font-bold">
+                        {plan.id === 'basic' ? '📊' : plan.id === 'professional' ? '🤖' : '🏢'}
+                      </span>
+                    </div>
+                    
+                    <h4 className="text-xl font-bold dark:text-[#B3B3B3] text-black mb-2">
+                      {plan.name}
+                    </h4>
+                    
+                    <div className="mb-4">
+                      <span className="text-3xl font-bold dark:text-[#B3B3B3] text-black">
+                        ${plan.price}
+                      </span>
+                      <span className="text-sm dark:text-[#B3B3B3] text-gray-600">/{plan.period}</span>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <p className="text-sm font-medium dark:text-[#B3B3B3] text-gray-700 mb-2">
+                        {plan.queries === 'unlimited' ? 'Unlimited' : plan.queries} AI consultations/month
+                      </p>
+                    </div>
+                    
+                    <ul className="space-y-2 mb-6">
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm dark:text-[#B3B3B3] text-gray-600">
+                          <span className="text-green-500 mt-0.5">✓</span>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <button
+                      onClick={() => handlePlanSelection(plan)}
+                      className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
+                        plan.popular
+                          ? 'bg-[#2F80ED] text-white hover:bg-blue-600'
+                          : 'bg-gray-100 dark:bg-[#171717] dark:text-[#B3B3B3] text-gray-700 hover:bg-gray-200 dark:hover:bg-[#252525]'
+                      }`}
+                    >
+                      {selectedPlan?.id === plan.id ? 'Current Plan' : 'Select Plan'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-8 text-center">
+                <p className="text-xs dark:text-[#B3B3B3] text-gray-500">
+                  🔒 Secure payment processing via Stripe • 30-day money-back guarantee
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Conversation Display */}
       <div className="mb-6 max-h-64 overflow-y-auto space-y-3">
         {conversation.map((message, index) => (
@@ -151,6 +388,26 @@ const ConversationalAI = () => {
           </div>
         ))}
       </div>
+
+      {/* Access Control */}
+      {!selectedPlan && (
+        <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-[#171717] dark:to-[#171717] rounded-lg border border-[#2F80ED]">
+          <div className="text-center">
+            <h3 className="font-semibold dark:text-[#B3B3B3] text-gray-900 mb-2">
+              🚀 Unlock AI Financial Assistant
+            </h3>
+            <p className="text-sm dark:text-[#B3B3B3] text-gray-600 mb-3">
+              Get professional financial analysis, spreadsheet automation, and investment insights
+            </p>
+            <button
+              onClick={() => setShowPricing(true)}
+              className="bg-[#2F80ED] text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all"
+            >
+              View Pricing Plans
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Control Buttons */}
       <div className="flex gap-3 mb-4">

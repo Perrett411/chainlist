@@ -185,7 +185,7 @@ const AgentPortal = ({ user }) => {
               👨‍💼 Agent Portal
             </h2>
             <p className="text-sm dark:text-[#B3B3B3] text-gray-600">
-              Employee workspace for {PERRETT_CONFIG.OWNER} • Welcome {user.firstName || user.name}
+              Employee workspace for {PERRETT_CONFIG.OWNER} <span className="text-xs">PERRETT and Associate Private Investment Firm LLC</span> • Welcome {user.firstName || user.name}
             </p>
           </div>
           <div className="text-right">

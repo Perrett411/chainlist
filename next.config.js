@@ -9,6 +9,11 @@ module.exports = {
   experimental: {
     serverComponentsExternalPackages: [],
   },
+  // Fix dev server cross-origin warnings
+  allowedDevOrigins: [
+    '3a537a4f-77af-4f31-ae3c-9d1df8557a3f-00-2nr5nficho2z6.janeway.replit.dev',
+    'localhost:5000'
+  ],
   async headers() {
     return [
       {

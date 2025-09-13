@@ -128,7 +128,7 @@ const DataStreaming = () => {
             Data Streaming Hub
           </h2>
           <p className="text-sm dark:text-[#B3B3B3] text-gray-600">
-            Real-time data integration for {PERRETT_CONFIG.OWNER}
+            Real-time data integration for {PERRETT_CONFIG.OWNER} <span className="text-xs">PERRETT and Associate Private Investment Firm LLC</span>
           </p>
         </div>
         <div className={`text-sm font-medium ${getStatusColor(streamStatus)}`}>

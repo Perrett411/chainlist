@@ -143,7 +143,7 @@ const AdminPanel = ({ user: propUser }) => {
           <div>
             <h2 className="text-xl font-bold dark:text-[#B3B3B3] text-black flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-gradient-to-r from-red-500 to-purple-500"></div>
-              {PERRETT_CONFIG.OWNER} - Admin Panel
+              {PERRETT_CONFIG.OWNER} <span className="text-xs">PERRETT and Associate Private Investment Firm LLC</span> - Admin Panel
             </h2>
             <p className="text-sm dark:text-[#B3B3B3] text-gray-600">
               API Controls & System Management
