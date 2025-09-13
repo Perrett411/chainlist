@@ -78,7 +78,7 @@ function Chain({ chain }) {
   return (
     <>
       <Head>
-        <title>{chain?.name ? `${chain.name} RPC and Chain settings | X Chain` : 'Unknown RPC and Chain settings | X Chain'}</title>
+        <title>{chain?.name ? `${chain.name} RPC and Chain settings | X Chainlist` : 'Unknown RPC and Chain settings | X Chainlist'}</title>
         <meta
           name="description"
           content={chain?.name ? `Find the best ${chain.name} RPC to connect to your wallets and Web3 middleware providers.` : 'Find the best RPC to connect to your wallets and Web3 middleware providers.'}

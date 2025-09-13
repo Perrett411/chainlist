@@ -79,7 +79,7 @@ function Chain({ chain }) {
   return (
     <>
       <Head>
-        <title>{chainName ? `Add ${chainName} to MetaMask | X Chain` : 'Add Network to MetaMask | X Chain'}</title>
+        <title>{chainName ? `Add ${chainName} to MetaMask | X Chainlist` : 'Add Network to MetaMask | X Chainlist'}</title>
         <meta
           name="description"
           content={chain?.name ? `Find the best ${chain.name} RPC to connect to your wallets and Web3 middleware providers.` : 'Find the best RPC to connect to your wallets and Web3 middleware providers.'}

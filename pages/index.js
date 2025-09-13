@@ -60,10 +60,10 @@ function Home({ initialChains }) {
   return (
     <>
       <Head>
-        <title>X Chain - Next-Generation Blockchain Networks</title>
+        <title>X Chainlist - Next-Generation Blockchain Networks</title>
         <meta
           name="description"
-          content="X Chain - Advanced blockchain networks, quantum-enhanced security, AI-powered financial management, and real-time data streaming. Next-Generation Blockchain Networks"
+          content="X Chainlist - Advanced blockchain networks, quantum-enhanced security, AI-powered financial management, and real-time data streaming. Next-Generation Blockchain Networks"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>

@@ -1,4 +1,4 @@
-# X Chain
+# X Chainlist
 
 ## Add a chain
 
