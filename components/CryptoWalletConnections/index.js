@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PERRETT_CONFIG } from '../../constants/perrettAssociates';
 
 const CryptoWalletConnections = () => {
   const [connectedWallets, setConnectedWallets] = useState([]);
   const [isConnecting, setIsConnecting] = useState(false);
   const [walletData, setWalletData] = useState({});
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [lastVoiceCommand, setLastVoiceCommand] = useState('');
+  const recognitionRef = useRef(null);
+  const listeningRef = useRef(false);
+  const speakingRef = useRef(false);
+  const pendingCommandRef = useRef(null);
 
   // Supported crypto wallets and exchanges
   const supportedWallets = [
@@ -82,6 +89,260 @@ const CryptoWalletConnections = () => {
     }
   ];
 
+  // Sync refs with state
+  useEffect(() => {
+    listeningRef.current = isListening;
+  }, [isListening]);
+
+  useEffect(() => {
+    speakingRef.current = isSpeaking;
+  }, [isSpeaking]);
+
+  // Initialize Speech Recognition for Wallet Commands (once only)
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        try {
+          const command = event.results[0][0].transcript.toLowerCase();
+          setLastVoiceCommand(command);
+          pendingCommandRef.current = command;
+          // Stop recognition and let onend handle the TTS
+          recognitionRef.current?.stop();
+        } catch (error) {
+          console.error('Speech recognition result error:', error);
+          setIsListening(false);
+          listeningRef.current = false;
+        }
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        try {
+          console.error('Speech recognition error:', event.error);
+          recognitionRef.current?.abort();
+          setIsListening(false);
+          listeningRef.current = false;
+          // Queue error message for after recognition stops
+          pendingCommandRef.current = 'ERROR_MESSAGE';
+        } catch (error) {
+          console.error('Speech recognition error handler error:', error);
+          setIsListening(false);
+          listeningRef.current = false;
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+        listeningRef.current = false;
+        
+        // Process any pending command after a short delay to ensure ASR is fully stopped
+        setTimeout(() => {
+          if (pendingCommandRef.current) {
+            const command = pendingCommandRef.current;
+            pendingCommandRef.current = null;
+            
+            if (command === 'ERROR_MESSAGE') {
+              speakResponse('Sorry, I didn\'t catch that. Please try again.');
+            } else {
+              handleVoiceCommand(command);
+            }
+          }
+        }, 300);
+      };
+    }
+
+    // Cleanup function
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+        recognitionRef.current = null;
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      listeningRef.current = false;
+      speakingRef.current = false;
+      pendingCommandRef.current = null;
+    };
+  }, []); // Only initialize once
+
+  // Handle Voice Commands for Wallet Operations
+  const handleVoiceCommand = async (command) => {
+    console.log('Voice command received:', command);
+    
+    try {
+      // Connect wallet commands
+      if (command.includes('connect') && command.includes('metamask')) {
+        const metamask = supportedWallets.find(w => w.id === 'metamask');
+        if (metamask && !connectedWallets.some(w => w.id === 'metamask')) {
+          speakResponse('Connecting to MetaMask wallet...');
+          await connectWallet(metamask);
+        } else if (connectedWallets.some(w => w.id === 'metamask')) {
+          speakResponse('MetaMask is already connected.');
+        } else {
+          speakResponse('MetaMask wallet not found in supported wallets.');
+        }
+      }
+      else if (command.includes('connect') && command.includes('coinbase')) {
+        const coinbase = supportedWallets.find(w => w.id === 'coinbase_wallet');
+        if (coinbase && !connectedWallets.some(w => w.id === 'coinbase_wallet')) {
+          speakResponse('Connecting to Coinbase Wallet...');
+          await connectWallet(coinbase);
+        } else if (connectedWallets.some(w => w.id === 'coinbase_wallet')) {
+          speakResponse('Coinbase Wallet is already connected.');
+        } else {
+          speakResponse('Coinbase Wallet not found.');
+        }
+      }
+      else if (command.includes('connect') && command.includes('phantom')) {
+        const phantom = supportedWallets.find(w => w.id === 'phantom');
+        if (phantom && !connectedWallets.some(w => w.id === 'phantom')) {
+          speakResponse('Connecting to Phantom wallet...');
+          await connectWallet(phantom);
+        } else if (connectedWallets.some(w => w.id === 'phantom')) {
+          speakResponse('Phantom wallet is already connected.');
+        } else {
+          speakResponse('Phantom wallet not found.');
+        }
+      }
+      else if (command.includes('connect') && command.includes('ledger')) {
+        const ledger = supportedWallets.find(w => w.id === 'ledger');
+        if (ledger && !connectedWallets.some(w => w.id === 'ledger')) {
+          speakResponse('Connecting to Ledger hardware wallet...');
+          await connectWallet(ledger);
+        } else if (connectedWallets.some(w => w.id === 'ledger')) {
+          speakResponse('Ledger is already connected.');
+        } else {
+          speakResponse('Ledger wallet not found.');
+        }
+      }
+      // Disconnect commands
+      else if (command.includes('disconnect') && command.includes('metamask')) {
+        if (connectedWallets.some(w => w.id === 'metamask')) {
+          speakResponse('Disconnecting MetaMask wallet...');
+          disconnectWallet('metamask');
+        } else {
+          speakResponse('MetaMask is not currently connected.');
+        }
+      }
+      else if (command.includes('disconnect') && command.includes('all')) {
+        if (connectedWallets.length > 0) {
+          speakResponse(`Disconnecting all ${connectedWallets.length} connected wallets...`);
+          connectedWallets.forEach(wallet => disconnectWallet(wallet.id));
+        } else {
+          speakResponse('No wallets are currently connected.');
+        }
+      }
+      // Status commands
+      else if (command.includes('status') || command.includes('connected')) {
+        if (connectedWallets.length === 0) {
+          speakResponse('No wallets are currently connected. You can connect MetaMask, Coinbase Wallet, Phantom, Ledger, or other supported wallets.');
+        } else {
+          const walletNames = connectedWallets.map(w => w.name).join(', ');
+          speakResponse(`You have ${connectedWallets.length} wallet${connectedWallets.length > 1 ? 's' : ''} connected: ${walletNames}`);
+        }
+      }
+      else if (command.includes('balance') || command.includes('total')) {
+        const totalBalance = connectedWallets.reduce((sum, wallet) => sum + (wallet.balance || 0), 0);
+        if (totalBalance > 0) {
+          speakResponse(`Your total balance across all connected wallets is approximately ${totalBalance.toFixed(4)} tokens.`);
+        } else {
+          speakResponse('No balance information available. Please ensure your wallets are properly connected.');
+        }
+      }
+      // Help commands
+      else if (command.includes('help') || command.includes('commands')) {
+        speakResponse('I can help you with wallet operations. Say "connect MetaMask", "connect Coinbase", "connect Phantom", "disconnect all", "check status", or "show balance" to interact with your crypto wallets.');
+      }
+      // Generic connect command
+      else if (command.includes('connect') && !command.includes('wallet')) {
+        speakResponse('Which wallet would you like to connect? Available options include MetaMask, Coinbase Wallet, Phantom, Ledger, WalletConnect, and various exchanges.');
+      }
+      else {
+        speakResponse('I didn\'t understand that command. Try saying "connect MetaMask", "check status", "show balance", or "help" for available commands.');
+      }
+    } catch (error) {
+      console.error('Error processing voice command:', error);
+      speakResponse('Sorry, there was an error processing your command. Please try again.');
+    }
+  };
+
+  // Text-to-Speech Response (only when not listening, using refs for current state)
+  const speakResponse = (text) => {
+    if ('speechSynthesis' in window && !listeningRef.current && !speakingRef.current) {
+      // Stop any current speech
+      window.speechSynthesis.cancel();
+      
+      setIsSpeaking(true);
+      speakingRef.current = true;
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      utterance.volume = 0.8;
+      
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        speakingRef.current = false;
+      };
+      
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event.error);
+        setIsSpeaking(false);
+        speakingRef.current = false;
+      };
+      
+      window.speechSynthesis.speak(utterance);
+    } else if (listeningRef.current) {
+      // Don't speak while listening to avoid ASR/TTS conflict
+      console.log('Skipping TTS while listening:', text);
+    } else if (speakingRef.current) {
+      // Don't speak while already speaking
+      console.log('Skipping TTS while already speaking:', text);
+    }
+  };
+
+  // Start/Stop Voice Recognition (prevent re-entrancy)
+  const toggleVoiceRecognition = () => {
+    try {
+      if (listeningRef.current) {
+        recognitionRef.current?.stop();
+        setIsListening(false);
+        listeningRef.current = false;
+      } else if (!speakingRef.current) {
+        // Only start if not currently speaking
+        // Stop any current speech before starting recognition
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+        setIsSpeaking(false);
+        speakingRef.current = false;
+        
+        if (recognitionRef.current) {
+          recognitionRef.current.start();
+          setIsListening(true);
+          listeningRef.current = true;
+          // Don't speak while starting recognition to avoid TTS/ASR conflict
+        } else {
+          alert('Speech recognition is not supported in this browser. Please use Chrome or Edge for voice commands.');
+        }
+      }
+    } catch (error) {
+      console.error('Voice recognition toggle error:', error);
+      setIsListening(false);
+      listeningRef.current = false;
+      // Delay error speech to avoid conflict
+      setTimeout(() => {
+        speakResponse('Voice recognition encountered an error. Please try again.');
+      }, 500);
+    }
+  };
+
   // Connect to wallet
   const connectWallet = async (wallet) => {
     setIsConnecting(true);
@@ -113,10 +374,12 @@ const CryptoWalletConnections = () => {
         }));
 
         alert(`Successfully connected to ${wallet.name}!`);
+        speakResponse(`Successfully connected to ${wallet.name}. Your wallet is now ready for transactions.`);
       }
     } catch (error) {
       console.error(`Error connecting to ${wallet.name}:`, error);
       alert(`Failed to connect to ${wallet.name}. Please try again.`);
+      speakResponse(`Failed to connect to ${wallet.name}. Please check your wallet and try again.`);
     } finally {
       setIsConnecting(false);
     }
@@ -239,7 +502,9 @@ const CryptoWalletConnections = () => {
       delete newData[walletId];
       return newData;
     });
-    alert(`Disconnected from wallet`);
+    const walletName = connectedWallets.find(w => w.id === walletId)?.name || 'wallet';
+    alert(`Disconnected from ${walletName}`);
+    speakResponse(`Disconnected from ${walletName}.`);
   };
 
   // Get wallet type color
@@ -265,15 +530,97 @@ const CryptoWalletConnections = () => {
             Connect all your crypto wallets and exchanges • {PERRETT_CONFIG.OWNER}
           </p>
         </div>
-        <div className="text-right">
-          <div className="text-sm font-medium dark:text-[#B3B3B3] text-gray-900">
-            {connectedWallets.length} Connected
-          </div>
-          <div className="text-xs dark:text-[#B3B3B3] text-gray-500">
-            Quantum-secured
+        <div className="flex items-center gap-4">
+          <button
+            onClick={toggleVoiceRecognition}
+            disabled={isSpeaking && !isListening}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              isListening 
+                ? 'bg-red-500 text-white animate-pulse hover:bg-red-600' 
+                : isSpeaking
+                ? 'bg-yellow-500 text-white opacity-75'
+                : 'bg-[#2F80ED] text-white hover:bg-blue-600'
+            } disabled:cursor-not-allowed`}
+          >
+            {isListening ? (
+              <>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zM12 9a1 1 0 10-2 0v2a1 1 0 102 0V9z" clipRule="evenodd" />
+                </svg>
+                Listening...
+              </>
+            ) : isSpeaking ? (
+              <>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.785L4.146 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.146l4.237-3.785z" clipRule="evenodd" />
+                  <path d="M14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.983 5.983 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.984 3.984 0 00-1.172-2.828 1 1 0 010-1.415z" />
+                </svg>
+                Speaking...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                </svg>
+                Voice Control
+              </>
+            )}
+          </button>
+          <div className="text-right">
+            <div className="text-sm font-medium dark:text-[#B3B3B3] text-gray-900">
+              {connectedWallets.length} Connected
+            </div>
+            <div className="text-xs dark:text-[#B3B3B3] text-gray-500">
+              Quantum-secured
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Voice Command Status */}
+      {(isListening || isSpeaking || lastVoiceCommand) && (
+        <div className="mb-6 p-4 bg-blue-50 dark:bg-[#171717] rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {isListening && (
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                    🎤 Listening for wallet commands...
+                  </span>
+                </div>
+              )}
+              {isSpeaking && (
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-yellow-500 animate-pulse"></div>
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                    🔊 Speaking response...
+                  </span>
+                </div>
+              )}
+              {lastVoiceCommand && !isListening && !isSpeaking && (
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="text-sm text-blue-700 dark:text-blue-400">
+                    ✅ Last command: "{lastVoiceCommand}"
+                  </span>
+                </div>
+              )}
+            </div>
+            {isListening && (
+              <button
+                onClick={toggleVoiceRecognition}
+                className="px-3 py-1 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-all"
+              >
+                Stop Listening
+              </button>
+            )}
+          </div>
+          <div className="mt-2 text-xs text-blue-600 dark:text-blue-500">
+            💡 Say: "connect MetaMask", "connect Coinbase", "check status", "show balance", "disconnect all", or "help"
+          </div>
+        </div>
+      )}
 
       {/* Connected Wallets */}
       {connectedWallets.length > 0 && (

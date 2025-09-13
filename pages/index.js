@@ -9,6 +9,7 @@ import QuantumLockChain from "../components/QuantumLockChain";
 import DataStreaming from "../components/DataStreaming";
 import CryptoWalletConnections from "../components/CryptoWalletConnections";
 import CryptoDataFeed from "../components/CryptoDataFeed";
+import CoinMarketCapFeed from "../components/CoinMarketCapFeed";
 import BankConnections from "../components/BankConnections";
 import AuthSystem from "../components/AuthSystem";
 import AdminPanel from "../components/AdminPanel";
@@ -40,6 +41,7 @@ function Home({ chains }) {
     { id: 'crypto', name: 'Crypto Wallets', icon: '💰' },
     { id: 'banks', name: 'Bank Connections', icon: '🏦' },
     { id: 'delta', name: 'Delta Data Feed', icon: '📈' },
+    { id: 'cmc', name: 'CoinMarketCap', icon: '🟠' },
     { id: 'streaming', name: 'Data Streaming', icon: '📊' },
     { id: 'admin', name: 'API Controls', icon: '⚙️' }
   ];
@@ -114,6 +116,7 @@ function Home({ chains }) {
                 {activeTab === 'crypto' && <CryptoWalletConnections />}
                 {activeTab === 'banks' && <BankConnections />}
                 {activeTab === 'delta' && <CryptoDataFeed />}
+                {activeTab === 'cmc' && <CoinMarketCapFeed />}
                 {activeTab === 'streaming' && <DataStreaming />}
                 {activeTab === 'admin' && <AdminPanel user={user} />}
                 
