@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { PERRETT_CONFIG } from '../../constants/perrettAssociates';
+import { useAuth } from '../../hooks/useAuth';
 
 const AssetTransfer = () => {
+  const { user, isAuthenticated } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [entities, setEntities] = useState([]);
   const [transfer, setTransfer] = useState({
@@ -27,6 +29,9 @@ const AssetTransfer = () => {
     email: '',
     phone: ''
   });
+
+  // Check if user is administrator
+  const isAdmin = user?.role === 'admin' && user?.permissions?.includes('admin');
 
   // Initialize with sample accounts, entities, and transfer history
   useEffect(() => {
