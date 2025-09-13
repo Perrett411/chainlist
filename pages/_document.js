@@ -6,14 +6,25 @@ import { HYPELAB_API_URL, HYPELAB_PROPERTY_SLUG } from "../constants/hypelab";
 const LANGUAGES = ["en", "zh"];
 
 function presetTheme() {
-  const dark = localStorage.getItem("theme") === "dark";
-
-  if (dark) {
-    document.body.classList.add("dark");
+  try {
+    const dark = localStorage.getItem("theme") === "dark";
+    if (dark) {
+      document.body.classList.add("dark");
+    }
+  } catch (error) {
+    // Fallback for SSR or when localStorage is not available
+    console.log("Theme initialization skipped during SSR");
   }
 }
 
-const themeScript = `(() => { ${presetTheme.toString()}; presetTheme() })()`;
+const themeScript = `(() => { 
+  try { 
+    ${presetTheme.toString()}; 
+    presetTheme(); 
+  } catch (e) { 
+    console.log("Theme script error:", e); 
+  } 
+})()`;
 
 class MyDocument extends Document {
   render() {

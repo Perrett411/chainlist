@@ -1,6 +1,7 @@
 modules = ["nodejs-20", "bash", "web"]
 [agent]
 expertMode = true
+integrations = ["javascript_openai:1.0.0", "javascript_log_in_with_replit:1.0.0", "javascript_database:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
@@ -32,6 +33,10 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 33077
+externalPort = 3001
 
 [[ports]]
 localPort = 44095
