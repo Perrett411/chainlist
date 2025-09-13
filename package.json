@@ -29,7 +29,7 @@
     "fathom-client": "^3.5.0",
     "memoizee": "^0.4.17",
     "next": "^14.0.0",
-    "next-intl": "^2.10.2",
+    "next-intl": "^4.3.8",
     "node-fetch": "^2.6.6",
     "openai": "^5.20.1",
     "openid-client": "^6.7.1",
