@@ -6,6 +6,7 @@ import { formatAddress, getProvider } from "../../utils";
 import { walletIcons } from "../../constants/walletIcons";
 import useConnect from "../../hooks/useConnect";
 import useAccount from "../../hooks/useAccount";
+import AccountDropdown from "../AccountDropdown";
 
 function Header({ lang, chainName, setChainName }) {
   const t = useTranslations("Common", lang);
@@ -117,19 +118,8 @@ function Header({ lang, chainName, setChainName }) {
               <span>Include Testnets</span>
             </label>
 
-            <button
-              className="flex gap-2 items-center dark:bg-[#212121] bg-[#DEDEDE] justify-center rounded-[10px] py-[8px] px-8 font-medium dark:text-[#B3B3B3] text-black"
-              onClick={connectWallet}
-            >
-              {address ? (
-                <>
-                  <img src={walletIcons[getProvider()]} width={20} height={20} alt="" />
-                  <span>{formatAddress(address)}</span>
-                </>
-              ) : (
-                t("connect-wallet")
-              )}
-            </button>
+            {/* Comprehensive Account Management Dropdown */}
+            <AccountDropdown />
           </div>
         </div>
       </header>

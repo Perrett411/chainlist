@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PERRETT_CONFIG } from '../../constants/perrettAssociates';
+import { useWallet } from '../../contexts/WalletContext';
 
 const PortfolioManagement = () => {
   const [portfolios, setPortfolios] = useState([]);
@@ -12,6 +13,17 @@ const PortfolioManagement = () => {
     initialBalance: '',
     currency: 'USD'
   });
+
+  // Access wallet context for integration
+  const {
+    walletState,
+    portfolioSummary,
+    user,
+    isAuthenticated,
+    hasWalletOrAuth,
+    formatCurrency,
+    refreshPortfolio
+  } = useWallet();
 
   // Initialize with sample portfolios for demo
   useEffect(() => {
@@ -101,20 +113,6 @@ const PortfolioManagement = () => {
     });
   };
 
-  const formatCurrency = (amount, currency = 'USD') => {
-    try {
-      if (currency === 'BTC' || currency === 'ETH') {
-        return `${amount.toFixed(4)} ${currency}`;
-      }
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: currency
-      }).format(amount);
-    } catch (error) {
-      // Fallback for unsupported currencies
-      return `${amount.toFixed(2)} ${currency}`;
-    }
-  };
 
   const formatPercentage = (value) => {
     const sign = value >= 0 ? '+' : '';
