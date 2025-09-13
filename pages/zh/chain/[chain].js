@@ -65,7 +65,7 @@ export async function getStaticPaths() {
     ])
     .flat();
 
-  return { paths, fallback: false };
+  return { paths: [], fallback: 'blocking' };
 }
 
 function Chain({ chain }) {

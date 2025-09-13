@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { HypeLabProvider as HypeLabSDKProvider } from "@hypelab/sdk-react";
 import { HYPELAB_API_URL, HYPELAB_PROPERTY_SLUG } from "../../constants/hypelab";
 
 // Feature flag to disable HypeLab in development
@@ -230,20 +229,7 @@ const HypeLabProvider = ({ children }) => {
     console.warn('[HypeLab Provider] Rendering children despite error:', initError.message);
   }
 
-  // For the React SDK, we still need the HypeLabSDKProvider wrapper
-  // But only if initialization succeeded or is in progress
-  if (!DISABLE_IN_DEVELOPMENT && isClient) {
-    return (
-      <HypeLabSDKProvider 
-        url={HYPELAB_API_URL} 
-        propertySlug={HYPELAB_PROPERTY_SLUG}
-        environment={process.env.NODE_ENV || 'development'}
-      >
-        {children}
-      </HypeLabSDKProvider>
-    );
-  }
-
+  // Return children directly since HypeLab is initialized via script injection
   return children;
 };
 

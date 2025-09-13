@@ -39,15 +39,15 @@ function Home({ initialChains }) {
   const { chains, isLoading, hasFullData, error } = useChains(initialChains);
   const { chainName, setChainName, finalChains } = useFilteredChains(chains);
   const [user, setUser] = React.useState(null);
-  const [activeTab, setActiveTab] = React.useState('blockchain');
+  const [activeTab, setActiveTab] = React.useState('ai');
   const [end, setEnd] = React.useState(15);
 
   const tabs = [
-    { id: 'blockchain', name: 'Blockchain Networks', icon: '🔗' },
-    { id: 'quantum', name: 'Quantum Lock Chain', icon: '⚛️' },
-    { id: 'ai', name: 'CFO AI Assistant', icon: '🤖' },
+    { id: 'ai', name: 'X Chainlist AI', icon: '🤖', featured: true },
     { id: 'agent', name: 'Agent Portal', icon: '👨‍💼' },
     { id: 'portfolio', name: 'Portfolio Management', icon: '📊' },
+    { id: 'quantum', name: 'Quantum Lock Chain', icon: '⚛️' },
+    { id: 'blockchain', name: 'Blockchain Networks', icon: '🔗' },
     { id: 'transfer', name: 'Asset Transfer', icon: '💸' },
     { id: 'crypto', name: 'Crypto Wallets', icon: '💰' },
     { id: 'banks', name: 'Bank Connections', icon: '🏦' },
@@ -60,21 +60,55 @@ function Home({ initialChains }) {
   return (
     <>
       <Head>
-        <title>X Chainlist - Next-Generation Blockchain Networks</title>
+        <title>X Chainlist AI - Advanced Financial AI Assistant</title>
         <meta
           name="description"
-          content="X Chainlist - Advanced blockchain networks, quantum-enhanced security, AI-powered financial management, and real-time data streaming. Next-Generation Blockchain Networks"
+          content="X Chainlist AI - Revolutionary AI-powered financial assistant with voice interaction, real-time market analysis, and quantum-enhanced blockchain insights. Experience the future of financial AI."
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <Layout chainName={chainName} setChainName={setChainName}>
         <div className="space-y-6">
-          {/* Authentication Section */}
+          {/* AI Welcome Section for Unauthenticated Users */}
           {!user && (
-            <div className="mb-8">
-              <AuthSystem onAuthChange={setUser} />
-            </div>
+            <>
+              <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-[20px] p-8 mb-8 text-white">
+                <div className="max-w-4xl mx-auto text-center">
+                  <h1 className="text-4xl font-bold mb-4">
+                    🤖 X Chainlist AI Assistant
+                  </h1>
+                  <p className="text-xl mb-6 opacity-90">
+                    Revolutionary AI-powered financial assistant with voice interaction, real-time market analysis, and quantum-enhanced blockchain insights.
+                  </p>
+                  <div className="grid md:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-[15px] p-6">
+                      <div className="text-3xl mb-3">🎙️</div>
+                      <h3 className="font-bold mb-2">Voice Interaction</h3>
+                      <p className="text-sm opacity-80">Talk naturally to your AI assistant with advanced speech recognition</p>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-[15px] p-6">
+                      <div className="text-3xl mb-3">💼</div>
+                      <h3 className="font-bold mb-2">CFO-Level Intelligence</h3>
+                      <p className="text-sm opacity-80">Get expert financial analysis and investment insights powered by GPT-5</p>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-[15px] p-6">
+                      <div className="text-3xl mb-3">⚛️</div>
+                      <h3 className="font-bold mb-2">Quantum Enhancement</h3>
+                      <p className="text-sm opacity-80">Advanced blockchain analysis with quantum-secured processing</p>
+                    </div>
+                  </div>
+                  <div className="text-lg font-medium mb-4">
+                    Starting at <span className="text-2xl font-bold">$29.99/month</span> • Professional plans available
+                  </div>
+                </div>
+              </div>
+              
+              {/* Authentication Section */}
+              <div className="mb-8">
+                <AuthSystem onAuthChange={setUser} />
+              </div>
+            </>
           )}
 
           {/* User Dashboard */}
@@ -110,8 +144,8 @@ function Home({ initialChains }) {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-[50px] whitespace-nowrap transition-all ${
                       activeTab === tab.id
-                        ? 'bg-[#2F80ED] text-white'
-                        : 'bg-gray-100 dark:bg-[#171717] dark:text-[#B3B3B3] text-gray-700 hover:bg-gray-200 dark:hover:bg-[#252525]'
+                        ? (tab.featured ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg' : 'bg-[#2F80ED] text-white')
+                        : (tab.featured ? 'bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 text-purple-700 dark:text-purple-300 hover:from-purple-200 hover:to-blue-200 dark:hover:from-purple-800/40 dark:hover:to-blue-800/40' : 'bg-gray-100 dark:bg-[#171717] dark:text-[#B3B3B3] text-gray-700 hover:bg-gray-200 dark:hover:bg-[#252525]')
                     }`}
                   >
                     <span>{tab.icon}</span>
