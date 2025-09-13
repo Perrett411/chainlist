@@ -106,6 +106,59 @@ export function arrayMove(array, fromIndex, toIndex) {
   return newArray;
 }
 
+// Lightweight chain data for SSR - only basic fields without heavy extraRpcs
+function createLightweightChain(chain) {
+  return {
+    chainId: chain.chainId,
+    name: chain.name,
+    nativeCurrency: chain.nativeCurrency,
+    shortName: chain.shortName,
+    tvl: chain.tvl,
+    chainSlug: chain.chainSlug,
+    // Only include first 2 RPC URLs for SSR, without tracking details
+    rpc: Array.isArray(chain.rpc) ? chain.rpc.slice(0, 2).map(rpc => ({
+      url: typeof rpc === 'string' ? rpc : rpc.url
+    })) : []
+  };
+}
+
+// Generate lightweight chain data for SSR (top 20 chains only)
+export async function generateLightweightChainData() {
+  const [chains, chainTvls] = await Promise.all([
+    fetchWithCache("https://chainid.network/chains.json"),
+    fetchWithCache("https://api.llama.fi/chains")
+  ]);
+
+  const overwrittenIds = overwrittenChains.reduce((acc, curr) => {
+    acc[curr.chainId] = true;
+    return acc;
+  }, {});
+
+  const sortedChains = chains
+    .filter((c) => c.status !== "deprecated" && !overwrittenIds[c.chainId])
+    .concat(overwrittenChains)
+    .map((chain) => {
+      const chainSlug = chainIds[chain.chainId];
+      let populatedChain = { ...chain };
+      
+      if (chainSlug !== undefined) {
+        const defiChain = chainTvls.find((c) => c.name.toLowerCase() === chainSlug);
+        if (defiChain) {
+          populatedChain.tvl = defiChain.tvl;
+          populatedChain.chainSlug = chainSlug;
+        }
+      }
+      
+      return createLightweightChain(populatedChain);
+    })
+    .sort((a, b) => {
+      return (b.tvl ?? 0) - (a.tvl ?? 0);
+    })
+    .slice(0, 20); // Only top 20 for SSR
+
+  return sortedChains;
+}
+
 export async function generateChainData() {
   const [chains, chainTvls] = await Promise.all([
     fetchWithCache("https://chainid.network/chains.json"),

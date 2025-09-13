@@ -16,22 +16,27 @@ import AdminPanel from "../components/AdminPanel";
 import PortfolioManagement from "../components/PortfolioManagement";
 import AssetTransfer from "../components/AssetTransfer";
 import AgentPortal from "../components/AgentPortal";
-import { generateChainData } from "../utils/fetch";
+import { generateLightweightChainData } from "../utils/fetch";
 import { useFilteredChains } from '../hooks/useFilteredChains';
+import { useChains } from '../hooks/useChains';
 import { PERRETT_CONFIG } from '../constants/perrettAssociates';
 
 export async function getStaticProps() {
-  const sortedChains = await generateChainData();
+  // Only load lightweight chain data for SSR (top 20 chains)
+  const lightweightChains = await generateLightweightChainData();
 
   return {
     props: {
-      chains: sortedChains,
+      initialChains: lightweightChains,
       // messages: (await import(`../translations/${locale}.json`)).default,
-    }
+    },
+    revalidate: 300, // Revalidate every 5 minutes
   };
 }
 
-function Home({ chains }) {
+function Home({ initialChains }) {
+  // Use custom hook for chain data with client-side fetching
+  const { chains, isLoading, hasFullData, error } = useChains(initialChains);
   const { chainName, setChainName, finalChains } = useFilteredChains(chains);
   const [user, setUser] = React.useState(null);
   const [activeTab, setActiveTab] = React.useState('blockchain');
@@ -132,31 +137,67 @@ function Home({ chains }) {
                 {activeTab === 'blockchain' && (
                   <div>
                     <div className="bg-white dark:bg-[#0D0D0D] rounded-[10px] shadow-lg p-6 mb-6">
-                      <h2 className="text-xl font-bold dark:text-[#B3B3B3] text-black mb-4">
-                        Blockchain Networks & RPC Endpoints
-                      </h2>
-                      <p className="text-sm dark:text-[#B3B3B3] text-gray-600 mb-4">
-                        Connect your wallets and Web3 middleware to EVM networks with optimized RPC endpoints
-                      </p>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h2 className="text-xl font-bold dark:text-[#B3B3B3] text-black mb-4">
+                            Blockchain Networks & RPC Endpoints
+                          </h2>
+                          <p className="text-sm dark:text-[#B3B3B3] text-gray-600 mb-4">
+                            Connect your wallets and Web3 middleware to EVM networks with optimized RPC endpoints
+                          </p>
+                        </div>
+                        {!hasFullData && !isLoading && (
+                          <div className="text-xs dark:text-[#B3B3B3] text-gray-500">
+                            Showing top 20 networks
+                          </div>
+                        )}
+                        {hasFullData && (
+                          <div className="text-xs text-green-600 dark:text-green-400">
+                            All networks loaded
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
-                    <React.Suspense fallback={<div className="h-64 flex items-center justify-center dark:text-[#B3B3B3] text-gray-500">Loading blockchain networks...</div>}>
-                      <div className="dark:text-[#B3B3B3] text-black grid gap-5 grid-cols-1 place-content-between pb-4 sm:pb-10 sm:grid-cols-[repeat(auto-fit,_calc(50%_-_15px))] 3xl:grid-cols-[repeat(auto-fit,_calc(33%_-_20px))] isolate grid-flow-dense">
-                        {finalChains.slice(0, 2).map((chain) => {
-                          return <Chain chain={chain} key={JSON.stringify(chain) + "en"} lang="en" />;
-                        })}
-                        <AdBanner />
-                        {finalChains.slice(2, end).map((chain) => {
-                          return <Chain chain={chain} key={JSON.stringify(chain) + "en"} lang="en" />;
-                        })}
+                    {/* Error State */}
+                    {error && (
+                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-[10px] p-4 mb-6">
+                        <div className="text-red-800 dark:text-red-200 text-sm">
+                          Failed to load full network data. Showing cached networks.
+                        </div>
                       </div>
-                    </React.Suspense>
-                    {end - 1 < finalChains.length ? (
+                    )}
+                    
+                    {/* Loading State */}
+                    {isLoading ? (
+                      <div className="h-64 flex flex-col items-center justify-center dark:text-[#B3B3B3] text-gray-500">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2F80ED] mb-4"></div>
+                        <div>Loading blockchain networks...</div>
+                      </div>
+                    ) : (
+                      <React.Suspense fallback={<div className="h-64 flex items-center justify-center dark:text-[#B3B3B3] text-gray-500">Loading blockchain networks...</div>}>
+                        <div className="dark:text-[#B3B3B3] text-black grid gap-5 grid-cols-1 place-content-between pb-4 sm:pb-10 sm:grid-cols-[repeat(auto-fit,_calc(50%_-_15px))] 3xl:grid-cols-[repeat(auto-fit,_calc(33%_-_20px))] isolate grid-flow-dense">
+                          {finalChains.slice(0, 2).map((chain) => {
+                            return <Chain chain={chain} key={JSON.stringify(chain) + "en"} lang="en" />;
+                          })}
+                          <AdBanner />
+                          {finalChains.slice(2, end).map((chain) => {
+                            return <Chain chain={chain} key={JSON.stringify(chain) + "en"} lang="en" />;
+                          })}
+                        </div>
+                      </React.Suspense>
+                    )}
+                    
+                    {/* Show More Button */}
+                    {!isLoading && end - 1 < finalChains.length ? (
                       <button
                         onClick={() => setEnd(finalChains.length)}
-                        className="w-full border dark:border-[#171717] border-[#EAEAEA] px-4 py-2 rounded-[50px] mb-auto text-white bg-[#2F80ED] mx-auto"
+                        className="w-full border dark:border-[#171717] border-[#EAEAEA] px-4 py-2 rounded-[50px] mb-auto text-white bg-[#2F80ED] mx-auto flex items-center justify-center gap-2"
                       >
                         Show all networks ({finalChains.length - end + 1} more)
+                        {!hasFullData && (
+                          <span className="text-xs opacity-75">(Loading full data...)</span>
+                        )}
                       </button>
                     ) : null}
                   </div>
