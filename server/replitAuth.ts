@@ -2,7 +2,7 @@
 // Referenced from javascript_log_in_with_replit blueprint
 
 import * as client from "openid-client";
-import { Strategy, type VerifyFunction } from "openid-client/passport";
+import { Strategy, type VerifyFunction } from "openid-client/build/passport";
 
 import passport from "passport";
 import session from "express-session";
@@ -10,6 +10,8 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import setupGoogleAuth from "./googleAuth";
+import type { OIDCClaims } from "./types";
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -53,26 +55,28 @@ function updateUserSession(
   user: any,
   tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
 ) {
-  const claims = tokens.claims();
+  const claims = tokens.claims() as OIDCClaims;
   user.claims = claims;
   user.access_token = tokens.access_token;
   user.refresh_token = tokens.refresh_token;
   user.expires_at = claims?.exp;
   
   // Log successful authentication
-  storage.logSystemEvent({
-    userId: claims.sub,
-    action: 'LOGIN_SUCCESS',
-    details: {
-      provider: 'replit_auth',
-      email: claims.email,
-      loginTime: new Date().toISOString(),
-    },
-    severity: 'info',
-  });
+  if (claims?.sub) {
+    storage.logSystemEvent({
+      userId: claims.sub,
+      action: 'LOGIN_SUCCESS',
+      details: {
+        provider: 'replit_auth',
+        email: claims.email || '',
+        loginTime: new Date().toISOString(),
+      },
+      severity: 'info',
+    });
+  }
 }
 
-async function upsertUser(claims: any) {
+async function upsertUser(claims: OIDCClaims) {
   // Determine user role based on email domain or other criteria
   let role = 'user';
   let permissions = ['read'];
@@ -90,6 +94,8 @@ async function upsertUser(claims: any) {
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
+    authProvider: 'replit',
+    replitId: claims["sub"],
     role,
     permissions,
     isActive: true,
@@ -102,15 +108,21 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Setup Google OAuth alongside Replit Auth
+  setupGoogleAuth(app);
+
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
+    const user: any = {};
     updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
+    const claims = tokens.claims();
+    if (claims) {
+      await upsertUser(claims as OIDCClaims);
+    }
     verified(null, user);
   };
 

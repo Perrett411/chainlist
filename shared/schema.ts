@@ -33,6 +33,11 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   
+  // Authentication providers
+  authProvider: varchar("auth_provider").default("replit").notNull(), // replit, google, manual
+  googleId: varchar("google_id").unique(),
+  replitId: varchar("replit_id").unique(),
+  
   // Additional fields for Perrett & Associates platform
   role: varchar("role").default("user").notNull(), // user, admin, cfo
   permissions: text("permissions").array().default(sql`ARRAY['read']::text[]`).notNull(),
@@ -107,6 +112,80 @@ export const approvalNotifications = pgTable("approval_notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Exchange and Portfolio Management Tables
+export const portfolios = pgTable("portfolios", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  riskLevel: varchar("risk_level").default("moderate").notNull(), // conservative, moderate, aggressive
+  currency: varchar("currency").default("USD").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const portfolioAssets = pgTable("portfolio_assets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  portfolioId: varchar("portfolio_id").notNull().references(() => portfolios.id, { onDelete: 'cascade' }),
+  symbol: varchar("symbol").notNull(), // BTC, ETH, AAPL, etc.
+  name: varchar("name").notNull(),
+  assetType: varchar("asset_type").notNull(), // crypto, stock, etf, forex
+  exchange: varchar("exchange"), // binance, coinbase, nasdaq, etc.
+  quantity: varchar("quantity").notNull(), // Store as string for precision
+  averageCost: varchar("average_cost").notNull(),
+  currentPrice: varchar("current_price"),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const exchangeConnections = pgTable("exchange_connections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  exchangeName: varchar("exchange_name").notNull(), // binance, coinbase, kraken, etc.
+  apiKeyHash: varchar("api_key_hash").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  lastSyncAt: timestamp("last_sync_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const priceAlerts = pgTable("price_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  symbol: varchar("symbol").notNull(),
+  targetPrice: varchar("target_price").notNull(),
+  alertType: varchar("alert_type").notNull(), // above, below, change_percent
+  isTriggered: boolean("is_triggered").default(false).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  triggeredAt: timestamp("triggered_at"),
+});
+
+export const marketData = pgTable("market_data", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  symbol: varchar("symbol").notNull(),
+  name: varchar("name").notNull(),
+  price: varchar("price").notNull(),
+  marketCap: varchar("market_cap"),
+  volume24h: varchar("volume_24h"),
+  change24h: varchar("change_24h"),
+  change7d: varchar("change_7d"),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+}, (table) => [
+  index("symbol_updated_idx").on(table.symbol, table.lastUpdated),
+]);
+
+export const portfolioPerformance = pgTable("portfolio_performance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  portfolioId: varchar("portfolio_id").notNull().references(() => portfolios.id, { onDelete: 'cascade' }),
+  totalValue: varchar("total_value").notNull(),
+  dayChange: varchar("day_change"),
+  weekChange: varchar("week_change"),
+  monthChange: varchar("month_change"),
+  yearChange: varchar("year_change"),
+  recordedAt: timestamp("recorded_at").defaultNow(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type ApiUsage = typeof apiUsage.$inferSelect;
@@ -117,3 +196,15 @@ export type TransactionApproval = typeof transactionApprovals.$inferSelect;
 export type InsertTransactionApproval = typeof transactionApprovals.$inferInsert;
 export type ApprovalNotification = typeof approvalNotifications.$inferSelect;
 export type InsertApprovalNotification = typeof approvalNotifications.$inferInsert;
+export type Portfolio = typeof portfolios.$inferSelect;
+export type InsertPortfolio = typeof portfolios.$inferInsert;
+export type PortfolioAsset = typeof portfolioAssets.$inferSelect;
+export type InsertPortfolioAsset = typeof portfolioAssets.$inferInsert;
+export type ExchangeConnection = typeof exchangeConnections.$inferSelect;
+export type InsertExchangeConnection = typeof exchangeConnections.$inferInsert;
+export type PriceAlert = typeof priceAlerts.$inferSelect;
+export type InsertPriceAlert = typeof priceAlerts.$inferInsert;
+export type MarketData = typeof marketData.$inferSelect;
+export type InsertMarketData = typeof marketData.$inferInsert;
+export type PortfolioPerformance = typeof portfolioPerformance.$inferSelect;
+export type InsertPortfolioPerformance = typeof portfolioPerformance.$inferInsert;
