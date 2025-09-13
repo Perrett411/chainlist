@@ -10,6 +10,9 @@ const ConversationalAI = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [usageCount, setUsageCount] = useState(0);
   const [showPricing, setShowPricing] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoError, setPromoError] = useState('');
+  const [promoSuccess, setPromoSuccess] = useState(null);
   const recognitionRef = useRef(null);
 
   // AI Assistant Pricing Plans
@@ -161,28 +164,52 @@ const ConversationalAI = () => {
         body: JSON.stringify({ 
           amount: plan.price,
           planId: plan.id,
-          planName: plan.name
+          planName: plan.name,
+          promoCode: promoCode || undefined
         }),
       });
       
       if (response.ok) {
-        const { clientSecret } = await response.json();
+        const data = await response.json();
+        const { clientSecret, promoDetails } = data;
+        
         // Here you would integrate with Stripe checkout
         // For now, simulate successful payment
         setSelectedPlan(plan);
         setUsageCount(0);
         setShowPricing(false);
+        setPromoCode('');
+        setPromoError('');
         
-        const welcomeMessage = { 
+        let welcomeMessage = `Welcome to ${plan.name}! You now have access to ${plan.queries === 'unlimited' ? 'unlimited' : plan.queries} AI consultations per month.`;
+        
+        if (promoDetails) {
+          welcomeMessage += ` 🎉 Great news! Your promo code ${promoDetails.code} has been applied, saving you $${promoDetails.savings.toFixed(2)} per month for ${promoDetails.duration} months!`;
+        }
+        
+        welcomeMessage += ' How can I help you with your financial analysis today?';
+        
+        const message = { 
           role: 'assistant', 
-          content: `Welcome to ${plan.name}! You now have access to ${plan.queries === 'unlimited' ? 'unlimited' : plan.queries} AI consultations per month. How can I help you with your financial analysis today?`, 
+          content: welcomeMessage, 
           timestamp: new Date() 
         };
-        setConversation([welcomeMessage]);
+        setConversation([message]);
+      } else {
+        const errorData = await response.json();
+        setPromoError(errorData.details || 'Payment failed');
       }
     } catch (error) {
       console.error('Payment error:', error);
+      setPromoError('Payment processing failed');
     }
+  };
+
+  // Handle promo code validation
+  const handlePromoCodeChange = (e) => {
+    setPromoCode(e.target.value);
+    setPromoError('');
+    setPromoSuccess(null);
   };
 
   // Process input with CFO AI
