@@ -66,9 +66,54 @@ export const systemLogs = pgTable("system_logs", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+// Transaction approval tables for company asset management
+export const transactionApprovals = pgTable("transaction_approvals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  transactionId: varchar("transaction_id").unique().notNull(), // External transaction reference
+  entityId: varchar("entity_id").notNull(), // Which entity the transaction is for
+  entityName: varchar("entity_name").notNull(),
+  entityType: varchar("entity_type").notNull(),
+  
+  // Transaction details
+  fromAccount: varchar("from_account").notNull(),
+  toAccount: varchar("to_account").notNull(),
+  amount: varchar("amount").notNull(), // Store as string to preserve precision
+  currency: varchar("currency").default("USD").notNull(),
+  transferType: varchar("transfer_type").notNull(), // internal, external, crypto, wire
+  memo: text("memo"),
+  
+  // Approval workflow
+  status: varchar("status").default("pending_approval").notNull(), // pending_approval, approved, rejected, cancelled
+  requiresApproval: boolean("requires_approval").default(false).notNull(),
+  approvedBy: varchar("approved_by").references(() => users.id, { onDelete: 'set null' }),
+  approvedAt: timestamp("approved_at"),
+  rejectedBy: varchar("rejected_by").references(() => users.id, { onDelete: 'set null' }),
+  rejectedAt: timestamp("rejected_at"),
+  rejectionReason: text("rejection_reason"),
+  
+  // Metadata
+  initiatedBy: varchar("initiated_by").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  initiatedAt: timestamp("initiated_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Approval notifications for admin alerts
+export const approvalNotifications = pgTable("approval_notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  transactionId: varchar("transaction_id").notNull().references(() => transactionApprovals.transactionId, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: varchar("type").notNull(), // pending_approval, approved, rejected, cancelled
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type ApiUsage = typeof apiUsage.$inferSelect;
 export type SystemLog = typeof systemLogs.$inferSelect;
 export type InsertApiUsage = typeof apiUsage.$inferInsert;
 export type InsertSystemLog = typeof systemLogs.$inferInsert;
+export type TransactionApproval = typeof transactionApprovals.$inferSelect;
+export type InsertTransactionApproval = typeof transactionApprovals.$inferInsert;
+export type ApprovalNotification = typeof approvalNotifications.$inferSelect;
+export type InsertApprovalNotification = typeof approvalNotifications.$inferInsert;

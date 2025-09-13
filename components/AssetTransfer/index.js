@@ -233,28 +233,94 @@ const AssetTransfer = () => {
 
     setIsProcessing(true);
 
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
     const selectedEntity = entities.find(ent => ent.id === transfer.entityId);
     
-    const newTransfer = {
-      id: `txn_${Date.now()}`,
-      fromAccount: accounts.find(acc => acc.id === transfer.fromAccount)?.name,
-      toAccount: transfer.transferType === 'external' ? transfer.toAccount : accounts.find(acc => acc.id === transfer.toAccount)?.name,
-      amount: parseFloat(transfer.amount),
-      currency: transfer.currency,
-      status: 'pending',
-      date: new Date().toISOString(),
-      memo: transfer.memo,
-      type: transfer.transferType,
-      fee: transfer.transferType === 'crypto' ? 15.00 : transfer.transferType === 'external' ? 25.00 : 0,
-      entityId: transfer.entityId,
-      entityName: selectedEntity?.name || '',
-      entityType: selectedEntity?.type || ''
-    };
+    // Check if this is a company asset transaction (Perrett & Associates LLC)
+    const isCompanyTransaction = selectedEntity?.name === 'Perrett & Associates LLC';
+    const requiresApproval = isCompanyTransaction || parseFloat(transfer.amount) >= 10000; // Also require approval for large amounts
 
-    setTransferHistory([newTransfer, ...transferHistory]);
+    try {
+      if (requiresApproval) {
+        // Submit for approval workflow
+        const approvalResponse = await fetch('/api/transactions/submit-for-approval', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            transactionId: `txn_${Date.now()}`,
+            entityId: transfer.entityId,
+            entityName: selectedEntity?.name || '',
+            entityType: selectedEntity?.type || '',
+            fromAccount: accounts.find(acc => acc.id === transfer.fromAccount)?.name || transfer.fromAccount,
+            toAccount: transfer.transferType === 'external' ? transfer.toAccount : accounts.find(acc => acc.id === transfer.toAccount)?.name,
+            amount: transfer.amount,
+            currency: transfer.currency,
+            transferType: transfer.transferType,
+            memo: transfer.memo,
+            requiresApproval: true
+          })
+        });
+
+        if (!approvalResponse.ok) {
+          throw new Error('Failed to submit transaction for approval');
+        }
+
+        // Add to transfer history with pending approval status
+        const newTransfer = {
+          id: `txn_${Date.now()}`,
+          fromAccount: accounts.find(acc => acc.id === transfer.fromAccount)?.name,
+          toAccount: transfer.transferType === 'external' ? transfer.toAccount : accounts.find(acc => acc.id === transfer.toAccount)?.name,
+          amount: parseFloat(transfer.amount),
+          currency: transfer.currency,
+          status: 'pending_approval',
+          date: new Date().toISOString(),
+          memo: transfer.memo,
+          type: transfer.transferType,
+          fee: transfer.transferType === 'crypto' ? 15.00 : transfer.transferType === 'external' ? 25.00 : 0,
+          entityId: transfer.entityId,
+          entityName: selectedEntity?.name || '',
+          entityType: selectedEntity?.type || '',
+          requiresApproval: true
+        };
+
+        setTransferHistory([newTransfer, ...transferHistory]);
+        
+        alert(isCompanyTransaction 
+          ? 'Company asset transaction submitted for administrator approval. You will be notified when approved.' 
+          : 'Large amount transaction submitted for administrator approval. You will be notified when approved.'
+        );
+      } else {
+        // Process immediately for non-company transactions under $10,000
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const newTransfer = {
+          id: `txn_${Date.now()}`,
+          fromAccount: accounts.find(acc => acc.id === transfer.fromAccount)?.name,
+          toAccount: transfer.transferType === 'external' ? transfer.toAccount : accounts.find(acc => acc.id === transfer.toAccount)?.name,
+          amount: parseFloat(transfer.amount),
+          currency: transfer.currency,
+          status: 'pending',
+          date: new Date().toISOString(),
+          memo: transfer.memo,
+          type: transfer.transferType,
+          fee: transfer.transferType === 'crypto' ? 15.00 : transfer.transferType === 'external' ? 25.00 : 0,
+          entityId: transfer.entityId,
+          entityName: selectedEntity?.name || '',
+          entityType: selectedEntity?.type || '',
+          requiresApproval: false
+        };
+
+        setTransferHistory([newTransfer, ...transferHistory]);
+        alert('Transfer initiated successfully!');
+      }
+
+    } catch (error) {
+      console.error('Transfer submission error:', error);
+      alert('Failed to submit transaction. Please try again.');
+    }
+
     setTransfer({
       fromAccount: '',
       toAccount: '',
@@ -267,7 +333,6 @@ const AssetTransfer = () => {
     });
     
     setIsProcessing(false);
-    alert('Transfer initiated successfully!');
   };
 
   const formatCurrency = (amount, currency = 'USD') => {
@@ -298,7 +363,10 @@ const AssetTransfer = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-700';
+      case 'approved': return 'bg-green-100 text-green-700';
       case 'pending': return 'bg-yellow-100 text-yellow-700';
+      case 'pending_approval': return 'bg-orange-100 text-orange-700';
+      case 'rejected': return 'bg-red-100 text-red-700';
       case 'failed': return 'bg-red-100 text-red-700';
       default: return 'bg-gray-100 text-gray-700';
     }
@@ -396,8 +464,36 @@ const AssetTransfer = () => {
                   ))}
                 </select>
                 {transfer.entityId && (
-                  <div className="mt-2 text-xs dark:text-[#B3B3B3] text-gray-500">
-                    Selected: {entities.find(e => e.id === transfer.entityId)?.name} • {entities.find(e => e.id === transfer.entityId)?.type}
+                  <div className="mt-2 space-y-1">
+                    <div className="text-xs dark:text-[#B3B3B3] text-gray-500">
+                      Selected: {entities.find(e => e.id === transfer.entityId)?.name} • {entities.find(e => e.id === transfer.entityId)?.type}
+                    </div>
+                    {entities.find(e => e.id === transfer.entityId)?.name === 'Perrett & Associates LLC' && (
+                      <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                          </svg>
+                          <span className="text-sm font-medium text-orange-700 dark:text-orange-300">Company Asset Transaction</span>
+                        </div>
+                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          This transaction requires administrator approval before processing. You will be notified when reviewed.
+                        </p>
+                      </div>
+                    )}
+                    {parseFloat(transfer.amount || 0) >= 10000 && entities.find(e => e.id === transfer.entityId)?.name !== 'Perrett & Associates LLC' && (
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+                          </svg>
+                          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Large Amount Transfer</span>
+                        </div>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                          Transfers over $10,000 require administrator approval for security purposes.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
