@@ -44,7 +44,7 @@ class MyDocument extends Document {
                 ((l = document.createElement(h)).async = !0),
                   (l.src = y),
                   (l.onload = function () {
-                    (a = { URL: p, propertySlug: e, environment: '<environment>' }), HypeLab.initialize(a);
+                    (a = { URL: p, propertySlug: e, environment: 'development' }), HypeLab.initialize(a);
                   }),
                   (b = document.getElementsByTagName(h)[0]).parentNode.insertBefore(l, b);
               })('script', 'https://api.hypelab.com/v1/scripts/hp-sdk.js?v=0', '${HYPELAB_API_URL}', '${HYPELAB_PROPERTY_SLUG}');`,
