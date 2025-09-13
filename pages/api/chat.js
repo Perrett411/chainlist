@@ -32,7 +32,7 @@ What would you like help with today? Ask me about your current assignments, need
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
