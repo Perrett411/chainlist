@@ -15,6 +15,7 @@ import AuthSystem from "../components/AuthSystem";
 import AdminPanel from "../components/AdminPanel";
 import PortfolioManagement from "../components/PortfolioManagement";
 import AssetTransfer from "../components/AssetTransfer";
+import AgentPortal from "../components/AgentPortal";
 import { generateChainData } from "../utils/fetch";
 import { useFilteredChains } from '../hooks/useFilteredChains';
 import { PERRETT_CONFIG } from '../constants/perrettAssociates';
@@ -40,6 +41,7 @@ function Home({ chains }) {
     { id: 'blockchain', name: 'Blockchain Networks', icon: '🔗' },
     { id: 'quantum', name: 'Quantum Lock Chain', icon: '⚛️' },
     { id: 'ai', name: 'CFO AI Assistant', icon: '🤖' },
+    { id: 'agent', name: 'Agent Portal', icon: '👨‍💼' },
     { id: 'portfolio', name: 'Portfolio Management', icon: '📊' },
     { id: 'transfer', name: 'Asset Transfer', icon: '💸' },
     { id: 'crypto', name: 'Crypto Wallets', icon: '💰' },
@@ -117,6 +119,7 @@ function Home({ chains }) {
               <div className="min-h-[400px]">
                 {activeTab === 'ai' && user && <ConversationalAI />}
                 {activeTab === 'quantum' && user && <QuantumLockChain />}
+                {activeTab === 'agent' && user && <AgentPortal user={user} />}
                 {activeTab === 'portfolio' && user && <PortfolioManagement />}
                 {activeTab === 'transfer' && user && <AssetTransfer />}
                 {activeTab === 'crypto' && user && <CryptoWalletConnections />}
