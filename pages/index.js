@@ -13,6 +13,8 @@ import CoinMarketCapFeed from "../components/CoinMarketCapFeed";
 import BankConnections from "../components/BankConnections";
 import AuthSystem from "../components/AuthSystem";
 import AdminPanel from "../components/AdminPanel";
+import PortfolioManagement from "../components/PortfolioManagement";
+import AssetTransfer from "../components/AssetTransfer";
 import { generateChainData } from "../utils/fetch";
 import { useFilteredChains } from '../hooks/useFilteredChains';
 import { PERRETT_CONFIG } from '../constants/perrettAssociates';
@@ -38,6 +40,8 @@ function Home({ chains }) {
     { id: 'blockchain', name: 'Blockchain Networks', icon: '🔗' },
     { id: 'quantum', name: 'Quantum Lock Chain', icon: '⚛️' },
     { id: 'ai', name: 'CFO AI Assistant', icon: '🤖' },
+    { id: 'portfolio', name: 'Portfolio Management', icon: '📊' },
+    { id: 'transfer', name: 'Asset Transfer', icon: '💸' },
     { id: 'crypto', name: 'Crypto Wallets', icon: '💰' },
     { id: 'banks', name: 'Bank Connections', icon: '🏦' },
     { id: 'delta', name: 'Delta Data Feed', icon: '📈' },
@@ -111,14 +115,16 @@ function Home({ chains }) {
 
               {/* Tab Content */}
               <div className="min-h-[400px]">
-                {activeTab === 'ai' && <ConversationalAI />}
-                {activeTab === 'quantum' && <QuantumLockChain />}
-                {activeTab === 'crypto' && <CryptoWalletConnections />}
-                {activeTab === 'banks' && <BankConnections />}
-                {activeTab === 'delta' && <CryptoDataFeed />}
-                {activeTab === 'cmc' && <CoinMarketCapFeed />}
-                {activeTab === 'streaming' && <DataStreaming />}
-                {activeTab === 'admin' && <AdminPanel user={user} />}
+                {activeTab === 'ai' && user && <ConversationalAI />}
+                {activeTab === 'quantum' && user && <QuantumLockChain />}
+                {activeTab === 'portfolio' && user && <PortfolioManagement />}
+                {activeTab === 'transfer' && user && <AssetTransfer />}
+                {activeTab === 'crypto' && user && <CryptoWalletConnections />}
+                {activeTab === 'banks' && user && <BankConnections />}
+                {activeTab === 'delta' && user && <CryptoDataFeed />}
+                {activeTab === 'cmc' && user && <CoinMarketCapFeed />}
+                {activeTab === 'streaming' && user && <DataStreaming />}
+                {activeTab === 'admin' && user && <AdminPanel user={user} />}
                 
                 {activeTab === 'blockchain' && (
                   <div>
